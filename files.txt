@@ -1,1 +1,2 @@
-main src/main.c ncurses SDL2 pthread
+main src/main.c ncurses SDL2 pthread include/player.h src/controller.c include/controller.h
+

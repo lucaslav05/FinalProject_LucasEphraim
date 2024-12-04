@@ -1,3 +1,5 @@
+#include "controller.h"
+#include "player.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
 #include <ncurses.h>
@@ -10,11 +12,6 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
-
-typedef struct
-{
-    int x, y;
-} Player;
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -228,43 +225,49 @@ int main(int argc, char *argv[])
             if(fds[0].revents & POLLIN)
             {
                 struct sockaddr_in recv_addr;
+                int                last_x;
+                int                last_y;
                 socklen_t          addr_len = sizeof(recv_addr);
+
+                last_y = remote_player.y;
+                last_x = remote_player.x;
 
                 if(recvfrom(sockfd, &remote_player, sizeof(Player), 0, (struct sockaddr *)&recv_addr, &addr_len) > 0)
                 {
+                    mvaddch(last_y, last_x, ' ');
                     mvaddch(remote_player.y, remote_player.x, 'x');    // Update remote position
                 }
             }
 
             if(input_method == 1 && (fds[1].revents & POLLIN))
             {
-                int ch = getch();
+                //                int ch = getch();
                 mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
 
-                switch(ch)
-                {
-                    case KEY_UP:
-                        local_player.y--;
-                        break;
-                    case KEY_DOWN:
-                        local_player.y++;
-                        break;
-                    case KEY_LEFT:
-                        local_player.x--;
-                        break;
-                    case KEY_RIGHT:
-                        local_player.x++;
-                        break;
-                    default:
-                        break;
-                }
+                //                switch(ch)
+                //                {
+                //                    case KEY_UP:
+                //                        local_player.y--;
+                //                        break;
+                //                    case KEY_DOWN:
+                //                        local_player.y++;
+                //                        break;
+                //                    case KEY_LEFT:
+                //                        local_player.x--;
+                //                        break;
+                //                    case KEY_RIGHT:
+                //                        local_player.x++;
+                //                        break;
+                //                    default:
+                //                        break;
+                //                }
 
+                getControllerInput(&local_player);
                 enforce_boundaries(&local_player);
                 mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
                 sendto(sockfd, &local_player, sizeof(Player), 0, (struct sockaddr *)&remote_addr, sizeof(remote_addr));
                 refresh();
             }
-
         }
 
         // Timer movement logic
