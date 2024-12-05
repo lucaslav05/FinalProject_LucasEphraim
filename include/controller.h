@@ -5,7 +5,16 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include "player.h"
+#include <SDL2/SDL.h>
+
+SDL_GameController *initializeController(void);
+
+int listenForInput(SDL_GameController const *controller, Player *player);
+// void listenForInput(Player *player);
+
+void closeController(SDL_GameController *controller);
 
 int getControllerInput(Player *player);
+// int getControllerInput(void);
 
 #endif    // CONTROLLER_H

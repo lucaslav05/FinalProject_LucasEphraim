@@ -1,15 +1,14 @@
-#include "controller.h"
-#include "player.h"
+#include <SDL2/SDL_gamecontroller.h>
 #include <arpa/inet.h>
+#include <controller.h>
 #include <fcntl.h>
-#include <linux/joystick.h>
 #include <ncurses.h>
 #include <netinet/in.h>
+#include <player.h>
 #include <poll.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <sys/ipc.h>
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
@@ -139,8 +138,12 @@ int main(int argc, char *argv[])
     char              *remote_ip     = NULL;
     Player             local_player;
     Player             remote_player;
+    int                running = 1;
+
+    SDL_GameController *controller = initializeController();
 
     controller_fd = setup_controller_input();
+
     if(controller_fd == -1)
     {
         return 1;
@@ -192,7 +195,6 @@ int main(int argc, char *argv[])
     initscr();
     cbreak();
     keypad(stdscr, true);
-    nodelay(stdscr, TRUE);
     noecho();
     curs_set(0);
     win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
@@ -255,7 +257,7 @@ int main(int argc, char *argv[])
     refresh();
 
     // Main game loop
-    while(1)
+    while(running)
     {
         int ret = poll(fds, 2, TIMEOUT);
 
@@ -264,8 +266,8 @@ int main(int argc, char *argv[])
             if(fds[0].revents & POLLIN)
             {
                 struct sockaddr_in recv_addr;
-                int                last_x;
                 int                last_y;
+                int                last_x;
                 socklen_t          addr_len = sizeof(recv_addr);
 
                 last_y = remote_player.y;
@@ -283,9 +285,8 @@ int main(int argc, char *argv[])
             {
                 if(input_method == 1)
                 {
-                    int ch = getch();
+                    const int ch = getch();                          // Read the keyboard input
                     mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
-
                     switch(ch)
                     {
                         case KEY_UP:
@@ -300,14 +301,33 @@ int main(int argc, char *argv[])
                         case KEY_RIGHT:
                             local_player.x++;
                             break;
+                        case 'q':
+                            running = 0;
+                            break;
                         default:
                             break;
                     }
                 }
                 else if(input_method == 3)
                 {
-                    mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
-                    getControllerInput(&local_player);
+                    int controllerStatus;
+
+                    mvaddch(local_player.y, local_player.x, ' ');
+
+                    controllerStatus = listenForInput(controller, &local_player);
+
+                    if(controllerStatus == -1)
+                    {
+                        running = 0;
+                    }
+
+                    if(controllerStatus == 0)
+                    {
+                        enforce_boundaries(&local_player);
+                        mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
+                        sendto(sockfd, &local_player, sizeof(Player), 0, (struct sockaddr *)&remote_addr, sizeof(remote_addr));
+                        refresh();
+                    }
                 }
                 enforce_boundaries(&local_player);
                 mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
@@ -325,6 +345,8 @@ int main(int argc, char *argv[])
 
         refresh();
     }
+
+    closeController(controller);
 
     // Cleanup
     close(sockfd);
