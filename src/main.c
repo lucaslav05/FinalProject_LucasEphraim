@@ -376,7 +376,9 @@ int main(int argc, char *argv[])
         refresh();
     }
 
+#ifndef __FreeBSD__
     closeController(controller);
+#endif
 
     // Cleanup
     close(sockfd);
