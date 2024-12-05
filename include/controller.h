@@ -7,7 +7,6 @@
 #include "player.h"
 #ifndef __FreeBSD__
 #include <SDL2/SDL.h>
-#endif
 
 SDL_GameController *initializeController(void);
 
@@ -18,5 +17,7 @@ void closeController(SDL_GameController *controller);
 
 int getControllerInput(Player *player);
 // int getControllerInput(void);
+
+#endif
 
 #endif    // CONTROLLER_H
