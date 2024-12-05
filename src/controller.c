@@ -113,6 +113,10 @@ int listenForInput(SDL_GameController const *controller, Player *player)
                     player->x++;
                     return 0;
                 }
+                if(event.cbutton.button == BUTTONLOGO && event.type == SDL_CONTROLLERBUTTONUP)
+                {
+                    return -1;
+                }
             }
         }
         SDL_Delay(1);

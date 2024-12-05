@@ -1,6 +1,4 @@
-#include <SDL2/SDL_gamecontroller.h>
 #include <arpa/inet.h>
-#include <controller.h>
 #include <fcntl.h>
 #include <ncurses.h>
 #include <netinet/in.h>
@@ -12,6 +10,11 @@
 #include <sys/socket.h>
 #include <time.h>
 #include <unistd.h>
+
+#ifndef __FreeBSD__
+    #include <SDL2/SDL_gamecontroller.h>
+    #include <controller.h>
+#endif
 
 #define MAX(a, b) ((a) > (b) ? (a) : (b))
 #define MIN(a, b) ((a) < (b) ? (a) : (b))
@@ -53,7 +56,9 @@ int setup_controller_input(void)
 void draw_box(WINDOW *win)
 {
     box(win, 0, 0);
+    mvwprintw(win, 0, 2, "Dot game");
     wrefresh(win);
+    refresh();
 }
 
 // Ensure the player stays within boundaries
@@ -139,7 +144,9 @@ int main(int argc, char *argv[])
     Player             remote_player;
     int                running = 1;
 
+#ifndef __FreeBSD__
     SDL_GameController *controller = NULL;
+#endif
 
     while((opt = getopt(argc, argv, "p:m:i:")) != -1)
     {
@@ -161,7 +168,12 @@ int main(int argc, char *argv[])
                 }
                 else if(strcmp(optarg, "controller") == 0)
                 {
+#ifndef __FreeBSD__
                     input_method = 3;
+#else
+                    fprintf(stderr, "Controller input is not supported on FreeBSD.\n");
+                    return 1;
+#endif
                 }
                 else
                 {
@@ -177,6 +189,7 @@ int main(int argc, char *argv[])
         }
     }
 
+#ifndef __FreeBSD__
     if(input_method == 3)
     {
         controller    = initializeController();
@@ -191,7 +204,14 @@ int main(int argc, char *argv[])
     {
         controller_fd = -1;
     }
-
+#else
+    if(input_method == 3)
+    {
+        fprintf(stderr, "Controller input is not supported on FreeBSD.\n");
+        return 1;
+    }
+    controller_fd = -1;
+#endif
     if(!player_number || !remote_ip)
     {
         fprintf(stderr, "Player number and remote IP are required.\n");
@@ -261,6 +281,7 @@ int main(int argc, char *argv[])
 
     mvaddch(local_player.y, local_player.x, 'o');
     mvaddch(remote_player.y, remote_player.x, 'x');
+    draw_box(win);
     refresh();
 
     // Main game loop
