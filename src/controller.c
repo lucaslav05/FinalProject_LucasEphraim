@@ -2,13 +2,17 @@
 // Created by lucas-laviolette on 12/4/24.
 //
 
-#include <SDL2/SDL.h>
+#ifndef __FreeBSD__
+    #include <SDL2/SDL.h>
+#endif
+
 #include <controller.h>
 #include <player.h>
 #include <stdio.h>
 
 // #define DEAD_ZONE 15000
 
+#ifndef __FreeBSD__
 SDL_GameController *initializeController(void)
 {
     SDL_GameController *controller;
@@ -293,3 +297,4 @@ int listenForInput(SDL_GameController const *controller, Player *player)
 //         }
 //     }
 // }
+#endif
