@@ -336,6 +336,7 @@ int main(int argc, char *argv[])
                             break;
                     }
                 }
+#ifndef __FreeBSD__
                 else if(input_method == 3)
                 {
                     int controllerStatus;
@@ -361,6 +362,7 @@ int main(int argc, char *argv[])
                 mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
                 sendto(sockfd, &local_player, sizeof(Player), 0, (struct sockaddr *)&remote_addr, sizeof(remote_addr));
                 refresh();
+#endif
             }
         }
 
