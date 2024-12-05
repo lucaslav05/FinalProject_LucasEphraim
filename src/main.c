@@ -335,6 +335,10 @@ int main(int argc, char *argv[])
                         default:
                             break;
                     }
+                    enforce_boundaries(&local_player);               // Enforce boundary after movement
+                    mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
+                    sendto(sockfd, &local_player, sizeof(Player), 0, (struct sockaddr *)&remote_addr, sizeof(remote_addr));
+                    refresh();
                 }
 #ifndef __FreeBSD__
                 else if(input_method == 3)
