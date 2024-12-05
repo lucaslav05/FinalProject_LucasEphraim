@@ -2,6 +2,7 @@
 #include "player.h"
 #include <arpa/inet.h>
 #include <fcntl.h>
+#include <linux/joystick.h>
 #include <ncurses.h>
 #include <netinet/in.h>
 #include <poll.h>
@@ -32,10 +33,22 @@
 #define PLAYER2_X 20
 #define PLAYER2_Y 10
 
+int  setup_controller_input(void);
 void draw_box(WINDOW *win);
 void enforce_boundaries(Player *player);
 int  setup_udp_socket(uint16_t port);
 void handle_timer_movement(Player *player);
+
+int setup_controller_input(void)
+{
+    int fd = open("/dev/input/js0", O_CLOEXEC);
+    if(fd == -1)
+    {
+        perror("Error opening controller input");
+        return -1;
+    }
+    return fd;
+}
 
 // Draw the game box
 void draw_box(WINDOW *win)
@@ -111,6 +124,7 @@ void handle_timer_movement(Player *player)
 
 int main(int argc, char *argv[])
 {
+    int                controller_fd;
     int                urandom;
     unsigned int       seed;
     struct pollfd      fds[2];
@@ -126,6 +140,12 @@ int main(int argc, char *argv[])
     Player             local_player;
     Player             remote_player;
 
+    controller_fd = setup_controller_input();
+    if(controller_fd == -1)
+    {
+        return 1;
+    }
+
     while((opt = getopt(argc, argv, "p:m:i:")) != -1)
     {
         char *endptr;
@@ -140,7 +160,18 @@ int main(int argc, char *argv[])
                 }
                 break;
             case 'm':
-                input_method = strcmp(optarg, "keyboard") == 0 ? 1 : 2;
+                if(strcmp(optarg, "keyboard") == 0)
+                {
+                    input_method = 1;
+                }
+                else if(strcmp(optarg, "controller") == 0)
+                {
+                    input_method = 3;
+                }
+                else
+                {
+                    input_method = 2;
+                }
                 break;
             case 'i':
                 remote_ip = optarg;
@@ -161,6 +192,7 @@ int main(int argc, char *argv[])
     initscr();
     cbreak();
     keypad(stdscr, true);
+    nodelay(stdscr, TRUE);
     noecho();
     curs_set(0);
     win = newwin(WIN_HEIGHT, WIN_WIDTH, WIN_Y, WIN_X);
@@ -192,7 +224,14 @@ int main(int argc, char *argv[])
     // Poll setup
     fds[0].fd     = sockfd;
     fds[0].events = POLLIN;
-    fds[1].fd     = STDIN_FILENO;
+    if(input_method == 3)
+    {
+        fds[1].fd = controller_fd;
+    }
+    else
+    {
+        fds[1].fd = STDIN_FILENO;
+    }
     fds[1].events = POLLIN;
 
     // Initialize shared memory with starting positions
@@ -236,33 +275,40 @@ int main(int argc, char *argv[])
                 {
                     mvaddch(last_y, last_x, ' ');
                     mvaddch(remote_player.y, remote_player.x, 'x');    // Update remote position
+                    refresh();
                 }
             }
 
-            if(input_method == 1 && (fds[1].revents & POLLIN))
+            if(fds[1].revents & POLLIN)
             {
-                //                int ch = getch();
-                mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
+                if(input_method == 1)
+                {
+                    int ch = getch();
+                    mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
 
-                //                switch(ch)
-                //                {
-                //                    case KEY_UP:
-                //                        local_player.y--;
-                //                        break;
-                //                    case KEY_DOWN:
-                //                        local_player.y++;
-                //                        break;
-                //                    case KEY_LEFT:
-                //                        local_player.x--;
-                //                        break;
-                //                    case KEY_RIGHT:
-                //                        local_player.x++;
-                //                        break;
-                //                    default:
-                //                        break;
-                //                }
-
-                getControllerInput(&local_player);
+                    switch(ch)
+                    {
+                        case KEY_UP:
+                            local_player.y--;
+                            break;
+                        case KEY_DOWN:
+                            local_player.y++;
+                            break;
+                        case KEY_LEFT:
+                            local_player.x--;
+                            break;
+                        case KEY_RIGHT:
+                            local_player.x++;
+                            break;
+                        default:
+                            break;
+                    }
+                }
+                else if(input_method == 3)
+                {
+                    mvaddch(local_player.y, local_player.x, ' ');    // Clear old position
+                    getControllerInput(&local_player);
+                }
                 enforce_boundaries(&local_player);
                 mvaddch(local_player.y, local_player.x, 'o');    // Draw updated position
                 sendto(sockfd, &local_player, sizeof(Player), 0, (struct sockaddr *)&remote_addr, sizeof(remote_addr));

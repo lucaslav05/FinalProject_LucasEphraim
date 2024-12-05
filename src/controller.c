@@ -10,7 +10,6 @@
 // #define DEAD_ZONE 15000
 
 int getControllerInput(Player *player)
-// int getControllerInput(void)
 {
     enum ButtonMapping
     {
@@ -25,19 +24,9 @@ int getControllerInput(Player *player)
         BUTTONRIGHT
     };
 
-    enum JoystickDirection
-    {
-        LEFTJOYSTICKHORIZONTAL,
-        LEFTJOYSTICKVERTICAL,
-        RIGHTJOYSTICKHORIZONTAL,
-        RIGHTJOYSTICKVERTICAL,
-    };
-
     SDL_Event           event;
-    SDL_GameController *controller = NULL;
-    // int                 xValue         = 0;
-    // int                 yValue         = 0;
-    int positionChange = 0;
+    SDL_GameController *controller     = NULL;
+    int                 positionChange = 0;
 
     if(SDL_Init(SDL_INIT_GAMECONTROLLER) != 0)
     {
@@ -62,8 +51,8 @@ int getControllerInput(Player *player)
     }
 
     while(!positionChange)
-    // while(1)
     {
+        // Handle events but don't block
         while(SDL_PollEvent(&event))
         {
             if(event.type == SDL_QUIT)
@@ -75,38 +64,31 @@ int getControllerInput(Player *player)
 
             if(event.type == SDL_CONTROLLERBUTTONDOWN || event.type == SDL_CONTROLLERBUTTONUP)
             {
-                // printf("Button event: button %d%s\n", event.cbutton.button, event.type == SDL_CONTROLLERBUTTONDOWN ? " pressed" : " released");
-
-                if(event.cbutton.button == BUTTONDOWN && event.type == SDL_CONTROLLERBUTTONUP)
+                if(event.cbutton.button == BUTTONDOWN && event.type == SDL_CONTROLLERBUTTONDOWN)
                 {
-                    // printf("up\n");
                     player->y++;
                     positionChange = 1;
                     break;
                 }
-                if(event.cbutton.button == BUTTONUP && event.type == SDL_CONTROLLERBUTTONUP)
+                if(event.cbutton.button == BUTTONUP && event.type == SDL_CONTROLLERBUTTONDOWN)
                 {
-                    // printf("down\n");
                     player->y--;
                     positionChange = 1;
                     break;
                 }
-                if(event.cbutton.button == BUTTONLEFT && event.type == SDL_CONTROLLERBUTTONUP)
+                if(event.cbutton.button == BUTTONLEFT && event.type == SDL_CONTROLLERBUTTONDOWN)
                 {
-                    // printf("left\n");
                     player->x--;
                     positionChange = 1;
                     break;
                 }
-                if(event.cbutton.button == BUTTONRIGHT && event.type == SDL_CONTROLLERBUTTONUP)
+                if(event.cbutton.button == BUTTONRIGHT && event.type == SDL_CONTROLLERBUTTONDOWN)
                 {
-                    // printf("right\n");
                     player->x++;
                     positionChange = 1;
                     break;
                 }
             }
-            // Joystick stuff goes here
         }
     }
 
