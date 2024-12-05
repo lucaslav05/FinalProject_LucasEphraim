@@ -5,7 +5,9 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include "player.h"
+#ifndef __FreeBSD__
 #include <SDL2/SDL.h>
+#endif
 
 SDL_GameController *initializeController(void);
 
