@@ -102,7 +102,7 @@ int setup_udp_socket(uint16_t port)
 
 void handle_timer_movement(Player *player)
 {
-    int direction = arc4random() % 4;            // Randomly pick direction
+    int direction = (int) arc4random() % 4;            // Randomly pick direction
     mvaddch(player->y, player->x, ' ');    // Clear old position
     switch(direction)
     {
