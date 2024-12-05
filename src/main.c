@@ -75,7 +75,7 @@ int setup_udp_socket(uint16_t port)
     int                sockfd;
     struct sockaddr_in server_addr;
 
-    sockfd = socket(AF_INET, SOCK_CLOEXEC, 0);
+    sockfd = socket(AF_INET, SOCK_DGRAM | SOCK_CLOEXEC, 0);
     if(sockfd == -1)
     {
         perror("Socket creation failed");
@@ -102,8 +102,8 @@ int setup_udp_socket(uint16_t port)
 
 void handle_timer_movement(Player *player)
 {
-    int direction = (int) arc4random() % 4;            // Randomly pick direction
-    mvaddch(player->y, player->x, ' ');    // Clear old position
+    int direction = (int)arc4random() % 4;    // Randomly pick direction
+    mvaddch(player->y, player->x, ' ');       // Clear old position
     switch(direction)
     {
         case 0:
