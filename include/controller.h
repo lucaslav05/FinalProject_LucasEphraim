@@ -5,7 +5,7 @@
 #ifndef CONTROLLER_H
 #define CONTROLLER_H
 #include "player.h"
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
 #include <SDL2/SDL.h>
 
 SDL_GameController *initializeController(void);

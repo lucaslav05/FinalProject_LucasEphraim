@@ -4,6 +4,7 @@
 #include <netinet/in.h>
 #include <player.h>
 #include <poll.h>
+#include <pthread.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -11,7 +12,7 @@
 #include <time.h>
 #include <unistd.h>
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
     #include <SDL2/SDL_gamecontroller.h>
     #include <controller.h>
 #endif
@@ -144,7 +145,7 @@ int main(int argc, char *argv[])
     Player             remote_player;
     int                running = 1;
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
     SDL_GameController *controller = NULL;
 #endif
 
@@ -168,7 +169,7 @@ int main(int argc, char *argv[])
                 }
                 else if(strcmp(optarg, "controller") == 0)
                 {
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
                     input_method = 3;
 #else
                     fprintf(stderr, "Controller input is not supported on FreeBSD.\n");
@@ -189,7 +190,7 @@ int main(int argc, char *argv[])
         }
     }
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
     if(input_method == 3)
     {
         controller    = initializeController();
@@ -336,7 +337,7 @@ int main(int argc, char *argv[])
                             break;
                     }
                 }
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
                 else if(input_method == 3)
                 {
                     int controllerStatus;
@@ -376,7 +377,7 @@ int main(int argc, char *argv[])
         refresh();
     }
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
     closeController(controller);
 #endif
 

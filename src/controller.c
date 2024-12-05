@@ -2,7 +2,8 @@
 // Created by lucas-laviolette on 12/4/24.
 //
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
+
     #include <SDL2/SDL.h>
 #endif
 
@@ -12,7 +13,8 @@
 
 // #define DEAD_ZONE 15000
 
-#ifndef __FreeBSD__
+#if !defined(__FreeBSD__) && !defined(__APPLE__)
+
 SDL_GameController *initializeController(void)
 {
     SDL_GameController *controller;
