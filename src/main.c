@@ -53,7 +53,6 @@ int setup_controller_input(void)
 void draw_box(WINDOW *win)
 {
     box(win, 0, 0);
-    mvwprintw(win, 0, 2, " Dot game ");
     wrefresh(win);
 }
 
@@ -140,14 +139,7 @@ int main(int argc, char *argv[])
     Player             remote_player;
     int                running = 1;
 
-    SDL_GameController *controller = initializeController();
-
-    controller_fd = setup_controller_input();
-
-    if(controller_fd == -1)
-    {
-        return 1;
-    }
+    SDL_GameController *controller = NULL;
 
     while((opt = getopt(argc, argv, "p:m:i:")) != -1)
     {
@@ -183,6 +175,21 @@ int main(int argc, char *argv[])
                 fprintf(stderr, "Usage: %s -p <player_number> -m <keyboard|timer> -i <remote_ip>\n", argv[0]);
                 return 1;
         }
+    }
+
+    if(input_method == 3)
+    {
+        controller    = initializeController();
+        controller_fd = setup_controller_input();
+
+        if(controller_fd == -1)
+        {
+            return 1;
+        }
+    }
+    else
+    {
+        controller_fd = -1;
     }
 
     if(!player_number || !remote_ip)
